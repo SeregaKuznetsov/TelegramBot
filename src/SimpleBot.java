@@ -5,6 +5,7 @@ import java.util.Scanner;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.api.methods.send.SendSticker;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
@@ -49,36 +50,36 @@ public class SimpleBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
+        if (message != null && message.hasPhoto()) {
+            sendMsg(message, "Найс фотка");
+            sendMsgToUser(SergeyChatId,message);
+        }
 
 
-        if (message != null && message.hasText()) {
+        if (message != null && message.hasText() && !chekOnAdminMessages(message)) {
             currentUser = message.getFrom();
             System.out.println(message.toString());
             System.out.println(message.getFrom().getFirstName()+" "+message.getText());
             if (autoPilot) {
                 if (message.getText().equals("/help")) {
                     sendMsg(message, "Привет "+ currentUser.getFirstName() +", я робот C3PO");
-                    sendMsgToMe(SergeyChatId,message);
+                    sendMsgToUser(SergeyChatId,message);
                 }
                 else if (message.getText().equals("привет")) {
                     sendMsg(message, "Привет "+ currentUser.getFirstName() +", я робот C3PO");
-                    sendMsgToMe(SergeyChatId,message);
-                }
-                else if (message.getText().equals("автопилот")) {
-                    if (autoPilot) {
-                        autoPilot = false;
-                    }
-                    else autoPilot = true;
+                    currentChatId = String.valueOf(message.getChatId());
+                    sendMsgToUser(SergeyChatId,message);
                 }
                 else {
                     sendMsg(message, "Я не знаю что это значит, обратитесь к Сергею");
-                    sendMsgToMe(SergeyChatId,message);
+                    currentChatId = String.valueOf(message.getChatId());
+                    sendMsgToUser(SergeyChatId,message);
                 }
             }
             else {
                 if (!(currentUser.getFirstName().equals("Serega"))) {
-                    sendMsgToMe(SergeyChatId,message);
                     currentChatId = String.valueOf(message.getChatId());
+                    sendMsgToMe(SergeyChatId,message);
                 }
                 if (currentUser.getFirstName().equals("Serega")) {
                     sendMsgToUser(currentChatId,message);
@@ -88,10 +89,27 @@ public class SimpleBot extends TelegramLongPollingBot {
         }
     }
 
+    private boolean chekOnAdminMessages(Message message) {
+        if (message.getText().equals("Автопилот он")) {
+            autoPilot = true;
+            return  true;
+        }
+        else if (message.getText().equals("Автопилот офф")) {
+            autoPilot = false;
+            return true;
+        }
+        return false;
+    }
+
     private void sendMsgToUser(String currentChatId, Message message) {
+        if (message.hasPhoto()) {
+            SendPhoto sendPhoto = new SendPhoto();
+            sendPhoto.setChatId(currentChatId);
+        }
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(currentChatId);
+
 
         sendMessage.setText(message.getText());
         try {
