@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
+import org.telegram.telegrambots.api.methods.ForwardMessage;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.api.methods.send.SendSticker;
@@ -52,7 +53,7 @@ public class SimpleBot extends TelegramLongPollingBot {
         Message message = update.getMessage();
         if (message != null && message.hasPhoto()) {
             sendMsg(message, "Найс фотка");
-            sendMsgToUser(SergeyChatId,message);
+
         }
 
 
@@ -63,7 +64,7 @@ public class SimpleBot extends TelegramLongPollingBot {
             if (autoPilot) {
                 if (message.getText().equals("/help")) {
                     sendMsg(message, "Привет "+ currentUser.getFirstName() +", я робот C3PO");
-                    sendMsgToUser(SergeyChatId,message);
+
                 }
                 else if (message.getText().equals("привет")) {
                     sendMsg(message, "Привет "+ currentUser.getFirstName() +", я робот C3PO");
@@ -102,16 +103,24 @@ public class SimpleBot extends TelegramLongPollingBot {
     }
 
     private void sendMsgToUser(String currentChatId, Message message) {
-        if (message.hasPhoto()) {
-            SendPhoto sendPhoto = new SendPhoto();
-            sendPhoto.setChatId(currentChatId);
-        }
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(currentChatId);
-
-
         sendMessage.setText(message.getText());
+
+        try {
+            sendMessage(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void ForwardMsgToUser(String currentChatId, Message message) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(currentChatId);
+        sendMessage.setText(message.getText());
+
         try {
             sendMessage(sendMessage);
         } catch (TelegramApiException e) {
@@ -125,34 +134,6 @@ public class SimpleBot extends TelegramLongPollingBot {
         sendMessage.setChatId(chatId);
 
         sendMessage.setText(currentChatId +" "+ message.getFrom().getFirstName() +": " + message.getText());
-        try {
-            sendMessage(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendPrivateMsg(String chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(chatId);
-        Scanner sc = new Scanner(System.in);
-        String answer = sc.nextLine();
-        sendMessage.setText(answer);
-        try {
-            sendMessage(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendMyMsg(Message message) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
-        sendMessage.setChatId(message.getChatId().toString());
-        Scanner sc = new Scanner(System.in);
-        String answer = sc.nextLine();
-        sendMessage.setText(answer);
         try {
             sendMessage(sendMessage);
         } catch (TelegramApiException e) {
